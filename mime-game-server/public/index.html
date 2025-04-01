@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밈 게임 테스트</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .player-panel {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .game-state {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+        .start-game-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .start-game-button:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            display: none;
+        }
+        .timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .timer.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .timer.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>밈 게임 테스트</h1>
+    
+    <div id="errorMessage" class="error-message"></div>
+    <div id="timer" class="timer"></div>
+    <button id="startGameButton" class="start-game-button" onclick="startGame()">게임 시작</button>
+    
+    <div class="container">
+        <div class="player-panel">
+            <h2>플레이어 1</h2>
+            <div>
+                <input type="text" id="roomId1" placeholder="방 ID" value="room1">
+                <input type="text" id="nickname1" placeholder="닉네임" value="player1">
+                <button onclick="joinRoom(1)">방 참가</button>
+            </div>
+            <div id="gameState1" class="game-state"></div>
+            <div id="answerPanel1" class="hidden">
+                <textarea id="answer1" placeholder="답변을 입력하세요"></textarea>
+                <button onclick="submitAnswer(1)">답변 제출</button>
+            </div>
+            <div id="votePanel1" class="hidden">
+                <select id="vote1"></select>
+                <button onclick="submitVote(1)">투표하기</button>
+            </div>
+        </div>
+
+        <div class="player-panel">
+            <h2>플레이어 2</h2>
+            <div>
+                <input type="text" id="roomId2" placeholder="방 ID" value="room1">
+                <input type="text" id="nickname2" placeholder="닉네임" value="player2">
+                <button onclick="joinRoom(2)">방 참가</button>
+            </div>
+            <div id="gameState2" class="game-state"></div>
+            <div id="answerPanel2" class="hidden">
+                <textarea id="answer2" placeholder="답변을 입력하세요"></textarea>
+                <button onclick="submitAnswer(2)">답변 제출</button>
+            </div>
+            <div id="votePanel2" class="hidden">
+                <select id="vote2"></select>
+                <button onclick="submitVote(2)">투표하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentPlayer = 1;
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateTimer(remainingTime, totalTime) {
+            const timerDiv = document.getElementById('timer');
+            if (remainingTime === 0) {
+                timerDiv.style.display = 'none';
+                return;
+            }
+
+            timerDiv.style.display = 'block';
+            timerDiv.textContent = `남은 시간: ${remainingTime}초`;
+            
+            // 타이머 색상 변경
+            timerDiv.classList.remove('warning', 'danger');
+            if (remainingTime <= 5) {
+                timerDiv.classList.add('danger');
+            } else if (remainingTime <= 10) {
+                timerDiv.classList.add('warning');
+            }
+        }
+
+        function startGame() {
+            const roomId = document.getElementById('roomId1').value;
+            socket.emit('game:start', roomId);
+        }
+
+        function joinRoom(playerNum) {
+            const roomId = document.getElementById(`roomId${playerNum}`).value;
+            const nickname = document.getElementById(`nickname${playerNum}`).value;
+            
+            socket.emit('room:join', { roomId, nickname });
+            currentPlayer = playerNum;
+        }
+
+        function submitAnswer(playerNum) {
+            const roomId = document.getElementById(`roomId${playerNum}`).value;
+            const nickname = document.getElementById(`nickname${playerNum}`).value;
+            const answer = document.getElementById(`answer${playerNum}`).value;
+            
+            socket.emit('round:submitAnswer', { roomId, nickname, answer });
+        }
+
+        function submitVote(playerNum) {
+            const roomId = document.getElementById(`roomId${playerNum}`).value;
+            const nickname = document.getElementById(`nickname${playerNum}`).value;
+            const votedFor = document.getElementById(`vote${playerNum}`).value;
+            
+            socket.emit('round:submitVote', { roomId, nickname, votedFor });
+        }
+
+        function updateGameState(playerNum, state) {
+            const gameStateDiv = document.getElementById(`gameState${playerNum}`);
+            gameStateDiv.innerHTML = `
+                <h3>게임 상태: ${state.state}</h3>
+                <p>라운드: ${state.currentRound}/${state.maxRounds}</p>
+                ${state.currentImage ? `<img src="${state.currentImage}" style="max-width: 100%;">` : ''}
+                <h4>플레이어 목록:</h4>
+                <ul>
+                    ${state.players.map(p => `
+                        <li>${p.nickname} (점수: ${p.score})
+                            ${p.currentAnswer ? `<br>답변: ${p.currentAnswer}` : ''}
+                            ${p.currentVote ? `<br>투표: ${p.currentVote}` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+
+            // 상태에 따른 UI 업데이트
+            const answerPanel = document.getElementById(`answerPanel${playerNum}`);
+            const votePanel = document.getElementById(`votePanel${playerNum}`);
+            const voteSelect = document.getElementById(`vote${playerNum}`);
+
+            answerPanel.classList.toggle('hidden', state.state !== 'ANSWERING');
+            votePanel.classList.toggle('hidden', state.state !== 'VOTING');
+
+            if (state.state === 'VOTING') {
+                // 투표 옵션 업데이트
+                voteSelect.innerHTML = state.players
+                    .filter(p => p.currentAnswer)
+                    .map(p => `<option value="${p.nickname}">${p.nickname}</option>`)
+                    .join('');
+            }
+        }
+
+        socket.on('game:state', (state) => {
+            updateGameState(1, state);
+            updateGameState(2, state);
+            updateTimer(state.remainingTime, state.totalTime);
+        });
+
+        socket.on('game:error', (error) => {
+            showError(error.message);
+        });
+    </script>
+</body>
+</html> 
