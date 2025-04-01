@@ -72,6 +72,8 @@ export class GameGateway
 
     // 방 참여
     client.join(roomId);
+    client.data.roomId = roomId;
+    client.data.playerId = playerId;
     this.gameRoomService.joinRoom(
       roomId,
       playerName,
@@ -245,5 +247,75 @@ export class GameGateway
         players: Array.from(room.players.values()),
       });
     }
+  }
+
+  @SubscribeMessage('chat:message')
+  async handleChatMessage(client: Socket, payload: { roomId: string; playerId: string; message: string; targetPlayerId?: string }) {
+    const { roomId, playerId, message, targetPlayerId } = payload;
+    
+    if (!roomId) {
+      console.error('No roomId found in socket data');
+      return;
+    }
+
+    const room = await this.gameRoomService.getRoom(roomId);
+    if (!room) {
+      console.error('Room not found:', roomId);
+      return;
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) {
+      console.error('Player not found:', playerId);
+      return;
+    }
+
+    const chatMessage = {
+      roomId,
+      playerId,
+      playerName: player.nickname,
+      message,
+      timestamp: new Date().toISOString(),
+      isWhisper: !!targetPlayerId,
+      targetPlayerId,
+    };
+
+    try {
+      // 귓속말인 경우 발신자와 수신자에게만 전송
+      if (targetPlayerId) {
+        const targetSocket = this.getPlayerSocket(roomId, targetPlayerId);
+        if (targetSocket) {
+          targetSocket.emit('chat:message', chatMessage);
+          console.log('Whisper sent to:', targetPlayerId);
+        } else {
+          console.error('Target socket not found:', targetPlayerId);
+        }
+        client.emit('chat:message', chatMessage);
+        console.log('Whisper sent to sender:', playerId);
+      } else {
+        // 일반 메시지는 방의 모든 플레이어에게 전송
+        this.server.to(roomId).emit('chat:message', chatMessage);
+        console.log('Message broadcast to room:', roomId);
+      }
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+    }
+  }
+
+  private getPlayerSocket(roomId: string, playerId: string): Socket | undefined {
+    const room = this.server.sockets.adapter.rooms.get(roomId);
+    if (!room) {
+      console.error('Room not found in socket adapter:', roomId);
+      return undefined;
+    }
+
+    for (const socketId of room) {
+      const socket = this.server.sockets.sockets.get(socketId);
+      if (socket && socket.data.playerId === playerId) {
+        return socket;
+      }
+    }
+    console.error('Player socket not found:', playerId);
+    return undefined;
   }
 }

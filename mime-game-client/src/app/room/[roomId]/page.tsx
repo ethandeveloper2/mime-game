@@ -5,11 +5,12 @@ import ImageCard from '@/components/ImageCard';
 import ResultModal from '@/components/ResultModal';
 import TimerBar from '@/components/TimerBar';
 import VoteCard from '@/components/VoteCard';
+import { Chat } from '@/components/Chat';
 import { useSocket } from '@/hooks/useSocket';
 import { useGameStore } from '@/store/gameStore';
 import { GameState, Player } from '@/types/game';
 import styled from '@emotion/styled';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef } from 'react';
 
 const Container = styled.div`
@@ -50,10 +51,20 @@ const WaitingText = styled.p`
 
 const GameContent = styled.div`
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+`;
+
+const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+`;
+
+const ChatContainer = styled.div`
+  height: 600px;
 `;
 
 const StartButton = styled.button`
@@ -92,6 +103,12 @@ const PlayerCard = styled.div<{ isHost: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${(props) => (props.isHost ? '#bbdefb' : '#f5f5f5')};
+  }
 `;
 
 const HostBadge = styled.span`
@@ -102,13 +119,44 @@ const HostBadge = styled.span`
   font-size: 0.8rem;
 `;
 
-export default function GamePage({
-  params,
-}: {
-  params: Promise<{ roomId: string }>;
-}) {
+const WhisperButton = styled.button`
+  padding: 0.25rem 0.5rem;
+  background-color: #9c27b0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #7b1fa2;
+  }
+`;
+
+interface TimerBarProps {
+  remainingTime: number;
+  totalTime: number;
+}
+
+interface AnswerInputProps {
+  onSubmit: (answer: string) => void;
+}
+
+interface VoteCardProps {
+  players: Player[];
+  onVote: (votedPlayerId: string) => void;
+}
+
+interface ResultModalProps {
+  players: Player[];
+  onClose: () => void;
+}
+
+export default function GamePage() {
+  const params = useParams();
+  const roomId = params.roomId as string;
   const isMounting = useRef(false);
-  const { roomId } = React.use(params);
   const {
     gameState,
     currentImage,
@@ -116,6 +164,8 @@ export default function GamePage({
     players,
     currentPlayer,
     title,
+    remainingTime,
+    totalTime,
     setGameState,
     setRound,
     setMaxRounds,
@@ -123,7 +173,8 @@ export default function GamePage({
     setCurrentImage,
     setRemainingTime,
     setTotalTime,
-    setTitle
+    setTitle,
+    setWhisperTarget
   } = useGameStore();
   const router = useRouter();
   const { emit, getSocket } = useSocket(roomId);
@@ -249,50 +300,80 @@ export default function GamePage({
       </GameHeader>
 
       <GameContent>
-        {gameState === 'WAITING' && (
-          <>
-            <PlayerList>
-              {players.map((player) => (
-                <PlayerCard
-                  key={player.id}
-                  isHost={player.isHost}
+        <MainContent>
+          {gameState === GameState.WAITING ? (
+            <>
+              <WaitingText>호스트가 게임을 시작할 때까지 기다려주세요...</WaitingText>
+              {currentPlayer?.isHost && (
+                <StartButton
+                  onClick={() => {
+                    emit('game:start', { roomId, playerId: currentPlayer.id });
+                  }}
                 >
-                  {player.nickname}
-                  {player.isHost && <HostBadge>호스트</HostBadge>}
-                </PlayerCard>
-              ))}
-            </PlayerList>
-            {currentPlayer?.isHost && (
-              <StartButton
-                onClick={handleStartGame}
-                disabled={players.length < 2}
+                  게임 시작
+                </StartButton>
+              )}
+            </>
+          ) : (
+            <>
+              <TimerBar
+                remainingTime={remainingTime}
+                totalTime={totalTime}
+              />
+              {currentImage && <ImageCard imageUrl={currentImage} />}
+              {gameState === GameState.ANSWERING && (
+                <AnswerInput
+                  onSubmit={(answer: string) => {
+                    emit('round:submitAnswer', {
+                      roomId,
+                      playerId: currentPlayer?.id,
+                      answer,
+                    });
+                  }}
+                />
+              )}
+              {gameState === GameState.VOTING && (
+                <VoteCard />
+              )}
+            </>
+          )}
+
+          <PlayerList>
+            {players.map((player) => (
+              <PlayerCard 
+                key={player.id} 
+                isHost={player.isHost}
+                onClick={() => {
+                  if (player.id !== currentPlayer?.id) {
+                    setWhisperTarget(player.id);
+                  }
+                }}
               >
-                게임 시작
-              </StartButton>
-            )}
-            {!currentPlayer?.isHost && (
-              <WaitingText>
-                호스트가 게임을 시작할 때까지 기다리는 중...
-              </WaitingText>
-            )}
-          </>
-        )}
+                {player.isHost && <HostBadge>호스트</HostBadge>}
+                {player.nickname} ({player.score}점)
+                {player.id !== currentPlayer?.id && (
+                  <WhisperButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setWhisperTarget(player.id);
+                    }}
+                  >
+                    귓속말
+                  </WhisperButton>
+                )}
+              </PlayerCard>
+            ))}
+          </PlayerList>
+        </MainContent>
 
-        {(gameState === 'IMAGE' || gameState === 'ANSWERING') && (
-          <ImageCard imageUrl={currentImage || ''} />
-        )}
-
-        {gameState === 'ANSWERING' && (
-          <>
-            <TimerBar />
-            <AnswerInput />
-          </>
-        )}
-
-        {(gameState === 'REVEAL' || gameState === 'VOTING') && <VoteCard />}
-
-        {gameState === 'RESULT' && <ResultModal />}
+        <ChatContainer>
+          <Chat roomId={roomId} />
+        </ChatContainer>
       </GameContent>
+
+      {gameState === GameState.RESULT && (
+        <ResultModal />
+      )}
     </Container>
   );
 }

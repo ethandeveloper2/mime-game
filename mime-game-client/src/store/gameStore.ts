@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { GameState } from '@/types/game';
 import type { Player } from '@/types/game';
+import type { Room } from '@/types/game';
 
 interface GameStore {
   // 게임 상태
@@ -18,6 +19,10 @@ interface GameStore {
   remainingTime: number;
   totalTime: number;
   isTimerRunning: boolean;
+  
+  // 채팅 관련
+  currentRoom: Room | null;
+  whisperTarget: string | null;
   
   // 게임 상태 관리 함수
   setTitle: (title: string) => void;
@@ -39,6 +44,10 @@ interface GameStore {
   startTimer: () => void;
   stopTimer: () => void;
   resetTimer: () => void;
+  
+  // 채팅 관련 함수
+  setCurrentRoom: (room: Room | null) => void;
+  setWhisperTarget: (target: string | null) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -53,6 +62,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   remainingTime: 60,
   totalTime: 60,
   isTimerRunning: false,
+  currentRoom: null,
+  whisperTarget: null,
 
   // 게임 상태 관리 함수
   setTitle: (title) => set({ title }),
@@ -84,4 +95,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startTimer: () => set({ isTimerRunning: true }),
   stopTimer: () => set({ isTimerRunning: false }),
   resetTimer: () => set({ remainingTime: 60, totalTime: 60, isTimerRunning: false }),
+  
+  // 채팅 관련 함수
+  setCurrentRoom: (room) => set({ currentRoom: room }),
+  setWhisperTarget: (target) => set({ whisperTarget: target }),
 })); 
