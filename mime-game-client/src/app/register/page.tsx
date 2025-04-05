@@ -1,10 +1,9 @@
 'use client';
 
-import GoogleLoginButton from '@/components/GoogleLoginButton';
-import LoginForm from '@/components/LoginForm';
-import { useRouter } from 'next/navigation';
+import RegisterForm from '@/components/RegisterForm';
 import React from 'react';
 import styled from '@emotion/styled';
+import { useRouter } from 'next/navigation';
 
 const Container = styled.div`
   max-width: 400px;
@@ -28,17 +27,16 @@ const Link = styled.a`
   }
 `;
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const router = useRouter();
 
   return (
     <Container>
-      <h1>로그인</h1>
-      <LoginForm />
-      <GoogleLoginButton />
-      <Link onClick={() => router.push('/register')}>회원가입 하러 가기</Link>
+      <h1>회원가입</h1>
+      <RegisterForm />
+      <Link onClick={() => router.push('/login')}>로그인 하러 가기</Link>
     </Container>
   );
 };
 
-export default LoginPage; 
+export default RegisterPage;

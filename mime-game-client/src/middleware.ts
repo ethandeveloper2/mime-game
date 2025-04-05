@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // 인증이 필요하지 않은 경로들
-const publicPaths = ['/login', '/api/auth'];
+const publicPaths = ['/login', '/api/auth', '/register'];
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('mime-museum-token');
