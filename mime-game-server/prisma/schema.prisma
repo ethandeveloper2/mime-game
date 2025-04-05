@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String?
+  name          String
+  googleId      String?     @unique
+  profilePicture String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  memes         Meme[]
+  comments      Comment[]
+  votes         Vote[]
+  gameScores    GameScore[]
+}
+
+model Meme {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  comments    Comment[]
+  votes       Vote[]
+  gameScores  GameScore[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  memeId    String
+  user      User     @relation(fields: [userId], references: [id])
+  meme      Meme     @relation(fields: [memeId], references: [id])
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  userId    String
+  memeId    String
+  user      User     @relation(fields: [userId], references: [id])
+  meme      Meme     @relation(fields: [memeId], references: [id])
+
+  @@unique([userId, memeId])
+}
+
+model GameScore {
+  id        String   @id @default(uuid())
+  score     Int
+  createdAt DateTime @default(now())
+  userId    String
+  memeId    String
+  user      User     @relation(fields: [userId], references: [id])
+  meme      Meme     @relation(fields: [memeId], references: [id])
+} 
