@@ -65,7 +65,7 @@ export const useSocket = (roomId: string) => {
       console.log('기존 소켓 연결 재사용');
     } else {
       // 새로운 소켓 연결 생성
-      socket = io('http://localhost:3000', {
+      socket = io('http://localhost:9100', {
         query: {
           roomId,
           playerId: currentPlayer?.id,
