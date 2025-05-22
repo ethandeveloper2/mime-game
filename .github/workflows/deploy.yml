@@ -54,7 +54,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./deploy.sh ./mime-game-server/dist/ ./mime-game-client/.next/"
+          source: "./deploy.sh ./mime-game-server/dist ./mime-game-client/.next"
           target: "/home/ubuntu/mime-game"
           strip_components: 0
           overwrite: true
