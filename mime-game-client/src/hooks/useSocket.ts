@@ -1,51 +1,49 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useGameStore } from '@/store/gameStore';
-import { Room } from '@/types/game';
 // import { Room } from '@/types/game';
 
-interface Player {
-  id: string;
-  name: string;
-  nickname: string;
-  score: number;
-  isHost: boolean;
-}
+// interface Player {
+//   id: string;
+//   name: string;
+//   nickname: string;
+//   score: number;
+//   isHost: boolean;
+// }
 
-interface CreateRoomData {
-  hostId: string;
-  hostName: string;
-}
+// interface CreateRoomData {
+//   hostId: string;
+//   hostName: string;
+// }
 
-interface JoinRoomData {
-  roomId: string;
-  playerId: string;
-  playerName: string;
-}
+// interface JoinRoomData {
+//   roomId: string;
+//   playerId: string;
+//   playerName: string;
+// }
 
-interface StartGameData {
-  roomId: string;
-}
+// interface StartGameData {
+//   roomId: string;
+// }
 
-type GameState = 'WAITING' | 'IMAGE' | 'ANSWERING' | 'REVEAL' | 'VOTING' | 'RESULT';
+// type GameState = 'WAITING' | 'IMAGE' | 'ANSWERING' | 'REVEAL' | 'VOTING' | 'RESULT';
 
-interface SocketEvents {
-  'game:state': (state: GameState) => void;
-  'player:join': (player: Player) => void;
-  'player:leave': (playerId: string) => void;
-  'player:score': (data: { playerId: string; score: number }) => void;
-  'game:start': (data: StartGameData) => void;
-  'game:end': () => void;
-  'rooms:list': (data: void) => Room[];
-  'rooms:subscribe': (data: void) => Room;
-  'room:create': (data: CreateRoomData) => string;
-  'room:join': (data: JoinRoomData) => boolean;
-  'timer:end': (data: void) => void;
-  'join:room': (data: { roomId: string }) => void;
-}
+// interface SocketEvents {
+//   'game:state': (state: GameState) => void;
+//   'player:join': (player: Player) => void;
+//   'player:leave': (playerId: string) => void;
+//   'player:score': (data: { playerId: string; score: number }) => void;
+//   'game:start': (data: StartGameData) => void;
+//   'game:end': () => void;
+//   'rooms:list': (data: void) => Room[];
+//   'rooms:subscribe': (data: void) => Room;
+//   'room:create': (data: CreateRoomData) => string;
+//   'room:join': (data: JoinRoomData) => boolean;
+//   'timer:end': (data: void) => void;
+//   'join:room': (data: { roomId: string }) => void;
+// }
 
 let socket: Socket | null = null;
-let isInitialized = false;
 
 export const useSocket = (roomId: string) => {
   const { currentPlayer } = useGameStore();

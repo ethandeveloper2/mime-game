@@ -1,5 +1,5 @@
 // src/components/RegisterForm.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import styled from '@emotion/styled';
 import { useAuthStore } from '@/store/authStore';
@@ -36,10 +36,15 @@ const Button = styled.button`
 `;
 
 const RegisterForm: React.FC = () => {
-  const { register, handleSubmit } = useForm();
+  type RegisterData = {
+    email: string;
+    password: string;
+    name: string;
+  } 
+  const { register, handleSubmit } = useForm<RegisterData>();
   const { setUser, setLoading, setError } = useAuthStore();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterData) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
@@ -69,7 +74,7 @@ const RegisterForm: React.FC = () => {
 
   return (
     <FormContainer>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={() => {handleSubmit(onSubmit);}}>
         <Input type="text" placeholder="이메일" {...register('email', { required: true })} />
         <Input type="password" placeholder="비밀번호" {...register('password', { required: true })} />
         <Input type="text" placeholder="이름" {...register('name', { required: true })} />

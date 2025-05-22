@@ -36,10 +36,15 @@ const Button = styled.button`
 `;
 
 const LoginForm: React.FC = () => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<LoginData>();
   const { setUser, setLoading, setError } = useAuthStore();
 
-  const onSubmit = async (data: any) => {
+  type LoginData = {
+    email: string;
+    password: string;
+  }
+
+  const onSubmit = async (data: LoginData) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
@@ -67,7 +72,7 @@ const LoginForm: React.FC = () => {
 
   return (
     <FormContainer>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={() => {handleSubmit(onSubmit);}}>
         <Input type="text" placeholder="이메일" {...register('email', { required: true })} />
         <Input type="password" placeholder="비밀번호" {...register('password', { required: true })} />
         <Button type="submit">로그인</Button>

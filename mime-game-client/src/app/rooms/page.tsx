@@ -143,7 +143,7 @@ export default function RoomsPage() {
   const [roomTitle, setRoomTitle] = useState('');
 
   // 방 목록 포맷팅 함수
-  const formatRooms = useCallback((response: any[]): Room[] => {
+  const formatRooms = useCallback((response: Room[]): Room[] => {
     return response.map(room => ({
       id: room.id,
       title: room.title,
@@ -176,7 +176,7 @@ export default function RoomsPage() {
     const socket = getSocket();
     if (!socket) return;
 
-    const handleRoomList = (response: any[]) => {
+    const handleRoomList = (response: Room[]) => {
       setRooms(formatRooms(response));
     };
 

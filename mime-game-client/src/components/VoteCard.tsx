@@ -123,7 +123,7 @@ export default function VoteCard() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
-  const { currentPlayer, gameState } = useGameStore();
+  const { currentPlayer } = useGameStore();
   const pathname = usePathname();
   const roomId = pathname.split('/')[2];
   const { emit } = useSocket(roomId);

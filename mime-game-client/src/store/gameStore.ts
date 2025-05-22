@@ -50,7 +50,7 @@ interface GameStore {
   setWhisperTarget: (target: string | null) => void;
 }
 
-export const useGameStore = create<GameStore>((set, get) => ({
+export const useGameStore = create<GameStore>((set) => ({
   // 초기 상태
   title: '',
   gameState: GameState.WAITING,

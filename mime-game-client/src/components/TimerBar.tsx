@@ -1,7 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
-import { useGameStore } from '@/store/gameStore';
-import { useSocket } from '@/hooks/useSocket';
 
 interface TimerBarProps {
   remainingTime: number;
@@ -26,7 +24,7 @@ const TimerProgress = styled.div<{ progress: number }>`
 
 const TimeText = styled.div`
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.2rem;  
   color: #333;
   margin-top: 0.5rem;
 `;

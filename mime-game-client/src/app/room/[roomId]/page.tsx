@@ -134,25 +134,6 @@ const WhisperButton = styled.button`
   }
 `;
 
-interface TimerBarProps {
-  remainingTime: number;
-  totalTime: number;
-}
-
-interface AnswerInputProps {
-  onSubmit: (answer: string) => void;
-}
-
-interface VoteCardProps {
-  players: Player[];
-  onVote: (votedPlayerId: string) => void;
-}
-
-interface ResultModalProps {
-  players: Player[];
-  onClose: () => void;
-}
-
 export default function GamePage() {
   const params = useParams();
   const roomId = params.roomId as string;
@@ -284,11 +265,6 @@ export default function GamePage() {
       default:
         return '';
     }
-  };
-
-  const handleStartGame = () => {
-    if (!currentPlayer?.isHost) return;
-    emit('game:start', { roomId: roomId, playerId: currentPlayer.id });
   };
 
   return (
