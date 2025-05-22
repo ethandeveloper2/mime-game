@@ -37,7 +37,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
             deploy.sh
-            mime-game-server/dist/
+            mime-game-server/.next/
             mime-game-client/dist/
           target: "/home/ubuntu/mime-game"
           
