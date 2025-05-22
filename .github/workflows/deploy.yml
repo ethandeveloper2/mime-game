@@ -19,13 +19,13 @@ jobs:
           
       - name: Install dependencies and build (Server)
         run: |
-          cd mime-game/mime-game-server
+          cd ./mime-game-server
           npm ci
           npm run build
       
       - name: Install dependencies and build (Client)
         run: |
-          cd mime-game/mime-game-client
+          cd ./mime-game-client
           npm ci
           npm run build
           
@@ -36,8 +36,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            mime-game/mime-game-server/dist/
-            mime-game/mime-game-client/dist/
+            ./deploy.sh
+            ./mime-game-server/dist/
+            ./mime-game-client/dist/
           target: "/home/ubuntu/mime-game"
           
 
