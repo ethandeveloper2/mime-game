@@ -4,6 +4,10 @@ import { useGameStore } from '@/store/gameStore';
 import { useSocket } from '@/hooks/useSocket';
 import { usePathname } from 'next/navigation';
 
+interface AnswerInputProps {
+  onSubmit: (answer: string) => void;
+}
+
 const Container = styled.div`
   width: 100%;
   display: flex;
@@ -57,7 +61,7 @@ const MyAnswer = styled.div`
   color: #1976d2;
 `;
 
-export default function AnswerInput() {
+const AnswerInput: React.FC<AnswerInputProps> = ({ onSubmit }) => {
   const [answer, setAnswer] = useState('');
   const [submittedAnswer, setSubmittedAnswer] = useState<string | null>(null);
   const { currentPlayer } = useGameStore();
@@ -77,6 +81,13 @@ export default function AnswerInput() {
     });
     setSubmittedAnswer(answer.trim());
     setAnswer('');
+    onSubmit(answer.trim());
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e);
+    }
   };
 
   return (
@@ -85,6 +96,7 @@ export default function AnswerInput() {
         type="text"
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
+        onKeyPress={handleKeyPress}
         placeholder="답변을 입력하세요..."
         maxLength={50}
         disabled={submittedAnswer !== null}
@@ -102,4 +114,6 @@ export default function AnswerInput() {
       )}
     </Container>
   );
-} 
+}; 
+
+export default AnswerInput;

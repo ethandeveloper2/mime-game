@@ -1,0 +1,46 @@
+name: CI/CD for mime-game
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # 서버 설치 및 테스트
+      - name: Install server dependencies
+        working-directory: ./mime-game-server
+        run: npm install
+
+      # - name: Run server tests
+      #   working-directory: ./mime-game-server
+      #   run: npm run test
+
+      # 클라이언트 설치 및 테스트
+      - name: Install client dependencies
+        working-directory: ./mime-game-client
+        run: npm install
+
+      - name: Run client build
+        working-directory: ./mime-game-client
+        run: npm run build
+
+      # - name: Run client tests
+      #   working-directory: ./mime-game-client
+      #   run: npm run test
