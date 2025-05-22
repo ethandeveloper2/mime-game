@@ -19,18 +19,34 @@ jobs:
 
       - name: Install dependencies and build (Server)
         run: |
-          cd ./mime-game-server
           npm ci
           npm run build
+        working-directory: ./mime-game-server
 
       - name: Install dependencies and build (Client)
         run: |
-          cd ./mime-game-client
           npm ci
           npm run build
+        working-directory: ./mime-game-client
 
-      - name: Ensure deploy.sh is executable
+      - name: Make deploy.sh executable
         run: chmod +x ./deploy.sh
+
+      - name: Check important files before SCP
+        run: |
+          echo "== Checking deploy.sh =="
+          ls -al ./deploy.sh || echo "Missing deploy.sh"
+
+          echo "== Server build output =="
+          ls -al ./mime-game-server/dist || echo "Missing server dist"
+
+          echo "== Client build output =="
+          ls -al ./mime-game-client/.next || echo "Missing client .next"
+
+      - name: Print full workspace structure
+        run: |
+          echo "== Full file tree =="
+          ls -alR
 
       - name: Copy build files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -43,6 +59,13 @@ jobs:
           strip_components: 0
           overwrite: true
           debug: true
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          use_insecure_cipher: false
+          rm: false
+          tar_dereference: false
+          tar_exec: tar
 
       - name: SSH and deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
